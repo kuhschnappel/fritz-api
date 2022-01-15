@@ -2,6 +2,11 @@
 
 namespace Kuhschnappel\FritzApi;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
+use Kuhschnappel\FritzApi\Utility\Helper;
+
+
 class Api
 {
 
@@ -42,38 +47,24 @@ class Api
         $this->authData['password'] = $password;
 
         $this->httpClient = new Client([
-            'base_uri' => $this->$this->authData['host']
+            'base_uri' => $this->authData['host']
         ]);
     }
 
     public function getDeviceListInfos()
     {
-//        $content = simplexml_load_string(file_get_contents('http://' . $host . '/login_sid.lua?version=2'));
-
-        return $this->curlApiRoute('/webservices/homeautoswitch.lua?switchcmd=getdevicelistinfos');
-//        return 'info'.print_r($this->authData);
+        $sid = $this->getSession();
+        $response = $this->curlApiRoute('/webservices/homeautoswitch.lua?switchcmd=getdevicelistinfos&sid='.$sid);
+				return simplexml_load_string($response);
     }
 
     private function curlApiRoute($route)
     {
-        $sid = $this->getSession();
-        return 'apiroute:'.$route.'sid:'.$sid;
-
-    }
-
-    private function getSession()
-    {
-        if (isset($this->authData['sid']))
-            return $this->authData['sid'];
-
-        $route = $this->authData['host'] . '/login_sid.lua?version=2';
-
         $headers = [
             'User-Agent' => 'fritz-api',
             'Content-Type' => 'text/xml',
             'Origin' => $_SERVER['SERVER_NAME']
         ];
-
         try {
             $response = $this->httpClient->request(
                 'GET',
@@ -82,15 +73,45 @@ class Api
                     'headers' => $headers
                 ]
             );
-            var_dump($response->getBody());
+            return $response->getBody();
         } catch (ClientException $e) {
-            var_dump('keinloginmöglich');
-            $statusCode = $e->getPresponse()->getStatusCode();
+            $statusCode = $e->getResponse()->getStatusCode();
             var_dump($statusCode);
+            throw new \Exception('Fritz!Box communication error');
         }
-//        var_dump($headers);
+    }
 
-        return "xyz";
+    private function getSession()
+    {
+			if (isset($this->authData['sid']))
+				return $this->authData['sid'];
+
+        $route = $this->authData['host'] . '/login_sid.lua?version=2';
+
+        $response = $this->curlApiRoute($route);
+				$responseXml = simplexml_load_string($response);
+
+				if (!$responseXml->Challenge)
+					throw new \Exception('No response challange string');
+
+				$challange = explode('$', $responseXml->Challenge);
+
+				$hash1 = Helper::hash_pbkdf2_sha256($this->authData['password'], $challange[2], $challange[1]);
+				$hash2 = Helper::hash_pbkdf2_sha256(Helper::unhexlify($hash1), $challange[4], $challange[3]);
+
+				$response = $challange[4] . '$' . $hash2;
+
+				$route = $this->authData['host'] . '/login_sid.lua?version=2&username=' . $this->authData['user'] . '&response=' . $response;
+				$response = $this->curlApiRoute($route);
+				$responseXml = simplexml_load_string($response);
+
+				if ($responseXml->SID == '0000000000000000')
+					throw new \Exception('Invalid Login / No sid');
+
+				$this->authData['sid'] = $responseXml->SID;
+
+				return $this->authData['sid'];
+
     }
 
 }
