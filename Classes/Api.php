@@ -6,9 +6,18 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use Kuhschnappel\FritzApi\Utility\Helper;
 
-
 class Api
 {
+
+    CONST ROUTE_LOGIN = '/login_sid.lua?version=2';
+    CONST ROUTE_SWITCH = '/webservices/homeautoswitch.lua?switchcmd=';
+
+    //TODO: move into device
+    private static $onoff = [
+        'off' => 0,
+        'on' => 1,
+        'toggle' => 2
+    ];
 
     /**
      * @var array $authData authentification array
@@ -32,9 +41,7 @@ class Api
      * @param string $host fritz box hostname e.g. http://192.168.178.1, http://fritz.box
      * @param string $user fritz box username with rights to use Smart Home
      * @param string $password fritz box usernames password
-     * @param boolean $logging enable logging if needed
      */
-
     public function __construct($user = false, $password = false, $host = 'http://192.168.178.1')
     {
 
@@ -51,11 +58,28 @@ class Api
         ]);
     }
 
+    public function loadDevices() {
+        echo "Geräte laden!!";
+    }
+
     public function getDeviceListInfos()
     {
-        $sid = $this->getSession();
-        $response = $this->curlApiRoute('/webservices/homeautoswitch.lua?switchcmd=getdevicelistinfos&sid='.$sid);
+        $response = $this->curlApiRoute(API::ROUTE_SWITCH . 'getdevicelistinfos&sid='.$this->getSession());
 				return simplexml_load_string($response);
+    }
+
+    //steckdosen
+    public function getSwitchList()
+    {
+        $response = $this->curlApiRoute(API::ROUTE_SWITCH . 'getswitchlist&sid='.$this->getSession());
+        return $response;
+    }
+
+    //TODO: move into device Model
+    public function setDevicePower($ain, $switch) //on / off / toggle
+    {
+        $response = $this->curlApiRoute(API::ROUTE_SWITCH . 'setsimpleonoff&onoff=' . API::$onoff[$switch] . '&ain=' . $ain . '&sid=' . $this->getSession());
+        return $response;
     }
 
     private function curlApiRoute($route)
@@ -83,35 +107,35 @@ class Api
 
     private function getSession()
     {
-			if (isset($this->authData['sid']))
-				return $this->authData['sid'];
+        if (isset($this->authData['sid']))
+            return $this->authData['sid'];
 
-        $route = $this->authData['host'] . '/login_sid.lua?version=2';
+        $response = $this->curlApiRoute(API::ROUTE_LOGIN);
+        $responseXml = simplexml_load_string($response);
 
+        if (!$responseXml->Challenge)
+            throw new \Exception('No response challange string');
+
+        $challange = explode('$', $responseXml->Challenge);
+
+        $hash1 = Helper::hash_pbkdf2_sha256($this->authData['password'], $challange[2], $challange[1]);
+        $hash2 = Helper::hash_pbkdf2_sha256(Helper::unhexlify($hash1), $challange[4], $challange[3]);
+
+        $response = $challange[4] . '$' . $hash2;
+
+        $route = API::ROUTE_LOGIN . '&username=' . $this->authData['user'] . '&response=' . $response;
         $response = $this->curlApiRoute($route);
-				$responseXml = simplexml_load_string($response);
+        $responseXml = simplexml_load_string($response);
 
-				if (!$responseXml->Challenge)
-					throw new \Exception('No response challange string');
+        if ($responseXml->SID == '0000000000000000')
+            throw new \Exception('Invalid Login / No sid');
 
-				$challange = explode('$', $responseXml->Challenge);
+        $this->authData['sid'] = $responseXml->SID;
 
-				$hash1 = Helper::hash_pbkdf2_sha256($this->authData['password'], $challange[2], $challange[1]);
-				$hash2 = Helper::hash_pbkdf2_sha256(Helper::unhexlify($hash1), $challange[4], $challange[3]);
-
-				$response = $challange[4] . '$' . $hash2;
-
-				$route = $this->authData['host'] . '/login_sid.lua?version=2&username=' . $this->authData['user'] . '&response=' . $response;
-				$response = $this->curlApiRoute($route);
-				$responseXml = simplexml_load_string($response);
-
-				if ($responseXml->SID == '0000000000000000')
-					throw new \Exception('Invalid Login / No sid');
-
-				$this->authData['sid'] = $responseXml->SID;
-
-				return $this->authData['sid'];
+        return $this->authData['sid'];
 
     }
+
+
 
 }
