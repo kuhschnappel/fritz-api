@@ -43,6 +43,16 @@ class Device
      */
     public $name;
 
+		/**
+     * @var string $present
+     */
+    public $present;
+
+		/**
+     * @var string $txbusy
+     */
+    public $txbusy;
+
 
     /**
      * @return string
@@ -156,6 +166,38 @@ class Device
     public function setName($name)
     {
         $this->name = $name;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPresent()
+    {
+        return $this->present;
+    }
+
+    /**
+     * @param string $present
+     */
+    public function setPresent($present)
+    {
+        $this->present = $present;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTxbusy()
+    {
+        return $this->txbusy;
+    }
+
+    /**
+     * @param string $txbusy
+     */
+    public function setTxbusy($txbusy)
+    {
+        $this->txbusy = $txbusy;
     }
 
 

@@ -53,14 +53,12 @@ class FritzHome
 
         foreach ($xml->device as $dev)
         {
-            echo '<hr>';
 
             echo $dev->attributes()->productname;
             switch ($dev->attributes()->productname) {
                 case 'FRITZ!DECT 210':
                     if ($smartPlug = new SmartPlug($dev))
                         $this->smartPlugs[] = $smartPlug;
-echo "JAS";
                     break;
             }
 
@@ -110,7 +108,8 @@ echo "JAS";
 
 //        var_dump($xml);
 //        echo "devs!!!<hr><hr><hr>";
-        var_dump($this->smartPlugs);
+
+        //var_dump($this->smartPlugs);
     }
 
 
