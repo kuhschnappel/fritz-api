@@ -8,6 +8,9 @@ namespace Kuhschnappel\FritzApi\Models;
 
 class Device
 {
+
+
+
     /**
      * @var string $identifier
      */

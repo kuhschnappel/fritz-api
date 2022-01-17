@@ -25,7 +25,7 @@ class Api
      * - password: (string) fritz box usernames password
      * - sid: (string) sid after successful login
      */
-    protected $authData = [];
+    protected static $authData = [];
 
     /**
      * @var boolean $enableLogging enable logging into log array
@@ -35,54 +35,47 @@ class Api
     /**
      * @var object $httpClient guzzle object for client
      */
-    public $httpClient = null;
+    public static $httpClient = null;
 
     /**
      * @param string $host fritz box hostname e.g. http://192.168.178.1, http://fritz.box
      * @param string $user fritz box username with rights to use Smart Home
      * @param string $password fritz box usernames password
      */
-    public function __construct($user = false, $password = false, $host = 'http://192.168.178.1')
+    public static function init($user = false, $password = false, $host = 'http://192.168.178.1')
     {
 
         if (!$user || !$password) {
 //            throw kein user bzw password
         }
 
-        $this->authData['host'] = $host;
-        $this->authData['user'] = $user;
-        $this->authData['password'] = $password;
+        self::$authData['host'] = $host;
+        self::$authData['user'] = $user;
+        self::$authData['password'] = $password;
 
-        $this->httpClient = new Client([
-            'base_uri' => $this->authData['host']
+        self::$httpClient = new Client([
+            'base_uri' => self::$authData['host']
         ]);
     }
 
-    public function loadDevices() {
+    public static function loadDevices() {
         echo "Geräte laden!!";
     }
 
-    public function getDeviceListInfos()
-    {
-        $response = $this->curlApiRoute(API::ROUTE_SWITCH . 'getdevicelistinfos&sid='.$this->getSession());
-				return simplexml_load_string($response);
-    }
+		public static function switchCmd($cmd, $params = null)
+		{
+				$paramsUrl  = '';
+				if ($params)
+					foreach ($params as $var => $value)
+						$paramsUrl.= '&'.$var.'='.$value;
 
-    //steckdosen
-    public function getSwitchList()
-    {
-        $response = $this->curlApiRoute(API::ROUTE_SWITCH . 'getswitchlist&sid='.$this->getSession());
-        return $response;
-    }
+				$route = API::ROUTE_SWITCH . $cmd . '&sid=' . self::getSession() . $paramsUrl;
 
-    //TODO: move into device Model
-    public function setDevicePower($ain, $switch) //on / off / toggle
-    {
-        $response = $this->curlApiRoute(API::ROUTE_SWITCH . 'setsimpleonoff&onoff=' . API::$onoff[$switch] . '&ain=' . $ain . '&sid=' . $this->getSession());
-        return $response;
-    }
+				$response = self::curlApiRoute($route);
+				return $response;
+		}
 
-    private function curlApiRoute($route)
+    private static function curlApiRoute($route)
     {
         $headers = [
             'User-Agent' => 'fritz-api',
@@ -90,7 +83,7 @@ class Api
             'Origin' => $_SERVER['SERVER_NAME']
         ];
         try {
-            $response = $this->httpClient->request(
+            $response = self::$httpClient->request(
                 'GET',
                 $route,
                 [
@@ -105,12 +98,12 @@ class Api
         }
     }
 
-    private function getSession()
+    private static function getSession()
     {
-        if (isset($this->authData['sid']))
-            return $this->authData['sid'];
+        if (isset(self::$authData['sid']))
+            return self::$authData['sid'];
 
-        $response = $this->curlApiRoute(API::ROUTE_LOGIN);
+        $response = self::curlApiRoute(API::ROUTE_LOGIN);
         $responseXml = simplexml_load_string($response);
 
         if (!$responseXml->Challenge)
@@ -118,21 +111,21 @@ class Api
 
         $challange = explode('$', $responseXml->Challenge);
 
-        $hash1 = Helper::hash_pbkdf2_sha256($this->authData['password'], $challange[2], $challange[1]);
+        $hash1 = Helper::hash_pbkdf2_sha256(self::$authData['password'], $challange[2], $challange[1]);
         $hash2 = Helper::hash_pbkdf2_sha256(Helper::unhexlify($hash1), $challange[4], $challange[3]);
 
         $response = $challange[4] . '$' . $hash2;
 
-        $route = API::ROUTE_LOGIN . '&username=' . $this->authData['user'] . '&response=' . $response;
-        $response = $this->curlApiRoute($route);
+        $route = API::ROUTE_LOGIN . '&username=' . self::$authData['user'] . '&response=' . $response;
+        $response = self::curlApiRoute($route);
         $responseXml = simplexml_load_string($response);
 
         if ($responseXml->SID == '0000000000000000')
             throw new \Exception('Invalid Login / No sid');
 
-        $this->authData['sid'] = $responseXml->SID;
+        self::$authData['sid'] = $responseXml->SID;
 
-        return $this->authData['sid'];
+        return self::$authData['sid'];
 
     }
 
