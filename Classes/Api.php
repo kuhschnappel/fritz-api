@@ -5,6 +5,8 @@ namespace Kuhschnappel\FritzApi;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use Kuhschnappel\FritzApi\Utility\Helper;
+use \Monolog\Logger;
+use \Monolog\Handler\RotatingFileHandler;
 
 class Api
 {
@@ -12,12 +14,12 @@ class Api
     CONST ROUTE_LOGIN = '/login_sid.lua?version=2';
     CONST ROUTE_SWITCH = '/webservices/homeautoswitch.lua?switchcmd=';
 
-    //TODO: move into device
-    private static $onoff = [
-        'off' => 0,
-        'on' => 1,
-        'toggle' => 2
-    ];
+
+		/**
+		 * @var object $logger monolog object for logs
+		 */
+		private static $logger = null;
+
 
     /**
      * @var array $authData authentification array
@@ -45,6 +47,7 @@ class Api
     public static function init($user = false, $password = false, $host = 'http://192.168.178.1')
     {
 
+
         if (!$user || !$password) {
 //            throw kein user bzw password
         }
@@ -56,6 +59,9 @@ class Api
         self::$httpClient = new Client([
             'base_uri' => self::$authData['host']
         ]);
+
+				self::initLogging();
+
     }
 
     public static function loadDevices() {
@@ -90,10 +96,18 @@ class Api
                     'headers' => $headers
                 ]
             );
+						self::$logger->debug('FritzBoxRequest', [
+							// 'Status' => $response->getStatusCode(),
+							'Route' => $route,
+							'Response' => serialize($response->getBody())
+						]);
             return $response->getBody();
         } catch (ClientException $e) {
-            $statusCode = $e->getResponse()->getStatusCode();
-            var_dump($statusCode);
+						self::$logger->error('FritzBoxRequest', [
+							'Status' => $e->getResponse()->getStatusCode(),
+							'Route' => $route,
+							'Response' => json_encode($response->getBody())
+						]);
             throw new \Exception('Fritz!Box communication error');
         }
     }
@@ -130,5 +144,35 @@ class Api
     }
 
 
+		private static function initLogging() {
+
+			$logDir = defined('FRITZ_API_LOG_DIR') ? FRITZ_API_LOG_DIR : $_SERVER['DOCUMENT_ROOT'] . '/logs';
+
+					if (!is_dir($logDir))
+							mkdir($logDir, 0777, true);
+
+					$htaccess = $logDir .'/.htaccess';
+					if (!is_file($htaccess)) {
+							$content = 'Deny from all';
+							file_put_contents($htaccess, $content);
+					}
+
+	 		// $loglevel = defined('FRITZ_API_LOG_LEVEL') ? Logger::FRITZ_API_LOG_LEVEL : Logger::ERROR;
+	 		$loglevel = defined('FRITZ_API_LOG_LEVEL') ? Logger::FRITZ_API_LOG_LEVEL : Logger::DEBUG;
+
+			self::$logger = new Logger('fritzApi');
+			self::$logger->pushHandler(new RotatingFileHandler($logDir . '/fritz-api-connector.log', 30, $loglevel));
+
+
+	// 		if (defined('VINOU_DEBUG') && VINOU_DEBUG)
+	// 			$loglevel = Logger::DEBUG;
+
+
+	// //$loglevel = Logger::DEBUG;
+
+	// 		$this->logger = new Logger('api');
+	// 		$this->logger->pushHandler(new RotatingFileHandler($logDir.'api-connector.log', 30, $loglevel));
+
+		}
 
 }
