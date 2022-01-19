@@ -4,16 +4,19 @@ namespace Kuhschnappel\FritzApi\Models\Devices;
 
 use Kuhschnappel\FritzApi\Api;
 use Kuhschnappel\FritzApi\Models\Device;
+use Kuhschnappel\FritzApi\Models\Mixins\DevicePower;
+use Kuhschnappel\FritzApi\Models\Mixins\DeviceTemperature;
+
 
 
 // FRITZ!DECT 210
 class SmartPlug extends Device
 {
 
+		use DevicePower;
+		use DeviceTemperature;
 
-    const OFF = 0;
-    const ON = 1;
-    const TOGGLE = 2;
+
 
     /**
      * @var array $powermeter
@@ -44,6 +47,8 @@ class SmartPlug extends Device
 
     public function __construct($cfg)
     {
+
+			parent::__construct($cfg);
 //        SimpleXMLElement Object
 //        (
 //            [@attributes] => Array
@@ -84,17 +89,10 @@ class SmartPlug extends Device
 
 // var_dump($cfg);
 
-        //attributes
-        $this->setIdentifier((string)$cfg->attributes()->identifier);
-        $this->setFunctionbitmask((string)$cfg->attributes()->functionbitmask);
-        $this->setFwversion((string)$cfg->attributes()->fwversion);
-        $this->setManufacturer((string)$cfg->attributes()->manufacturer);
-        $this->setProductname((string)$cfg->attributes()->productname);
 
 
-        $this->setPresent((string)$cfg->present);
-        $this->setTxbusy((string)$cfg->txbusy);
-        $this->setName((string)$cfg->name);
+
+
 
         $this->setSwitch([
             'state'=>(int)$cfg->switch->state,
@@ -113,10 +111,7 @@ class SmartPlug extends Device
             'energy'=>(string)$cfg->powermeter->energy
         ]);
 
-        $this->setTemperature([
-            'celsius'=>(string)$cfg->temperature->celsius,
-            'offset'=>(string)$cfg->temperature->offset
-        ]);
+
     }
 
     /**
@@ -175,58 +170,10 @@ class SmartPlug extends Device
         $this->simpleonoff = $simpleonoff;
     }
 
-    /**
-     * @return array
-     */
-    public function getTemperature()
-    {
-        return $this->temperature;
-    }
-
-    /**
-     * @param array $temperature
-     */
-    public function setTemperature($temperature)
-    {
-        $this->temperature = $temperature;
-    }
-
-
-		/**
-     * @return boolean
-     */
-		public function isOn()
-    {
-			return (boolean)$this->switch['state'];
-		}
-
-    public function toggle()
-    {
-			$this->switch['state'] = $this->simpleonoff['state'] = (int)!$this->isOn();
-			// Api::setDevicePower($this->identifier, self::TOGGLE);
-			Api::switchCmd('setsimpleonoff', ['ain' => $this->identifier, 'onoff' => self::TOGGLE]);
-
-    }
-
-    public function powerOff()
-    {
-			//TODO: switchstate und und simpleonof auf 0 setzen
-			$this->switch['state'] = $this->simpleonoff['state'] = self::OFF;
-			// Api::setDevicePower($this->identifier, self::OFF);
-			Api::switchCmd('setsimpleonoff', ['ain' => $this->identifier, 'onoff' => self::OFF]);
 
 
 
-    }
 
-		public function powerOn()
-    {
-			//TODO: switchstate und und simpleonof auf 1 setzen
-			$this->switch['state'] = $this->simpleonoff['state'] = self::ON;
-			// Api::setDevicePower($this->identifier, self::ON);
-			Api::switchCmd('setsimpleonoff', ['ain' => $this->identifier, 'onoff' => self::ON]);
-
-    }
 
 		// abfrage des powerstate
 		// $res = Api::switchCmd('getswitchstate', $this->getIdentifier());

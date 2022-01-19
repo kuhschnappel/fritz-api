@@ -5,6 +5,8 @@ namespace Kuhschnappel\FritzApi\Models;
 
 use Kuhschnappel\FritzApi\Api;
 use Kuhschnappel\FritzApi\Models\Devices\SmartPlug;
+use Kuhschnappel\FritzApi\Models\Devices\Thermostat;
+use Kuhschnappel\FritzApi\Models\Devices\LightBulb;
 
 class FritzHome
 {
@@ -18,6 +20,16 @@ class FritzHome
      */
     protected static $smartPlugs;
 
+    /**
+     * @var array set of Thermostats Devices
+     */
+    protected static $thermostats;
+
+    /**
+     * @var array set of LightBulb Devices
+     */
+    protected static $lightBulbs;
+
 
     /**
      * @return array
@@ -26,10 +38,28 @@ class FritzHome
     {
         if($refresh)
             self::getDevices($refresh);
-
         return self::$smartPlugs;
     }
 
+	  /**
+     * @return array
+     */
+    public static function getThermostats($refresh = false)
+    {
+        if($refresh)
+            self::getDevices($refresh);
+        return self::$thermostats;
+    }
+
+	  /**
+     * @return array
+     */
+    public static function getLightBulbs($refresh = false)
+    {
+        if($refresh)
+            self::getDevices($refresh);
+        return self::$lightBulbs;
+    }
 
     public static function getDevices($refresh = false)
     {
@@ -49,20 +79,53 @@ class FritzHome
 
         foreach ($xml->device as $dev)
         {
-
-            echo $dev->attributes()->productname;
             switch ($dev->attributes()->productname) {
                 case 'FRITZ!DECT 210':
-                    if ($smartPlug = new SmartPlug($dev))
-                        self::$smartPlugs[] = $smartPlug;
+									$objectName = 'SmartPlug';
                     break;
+								case 'FRITZ!DECT 301':
+									$objectName = 'Thermostat';
+									break;
+								case 'FRITZ!DECT 500':
+									$objectName = 'LightBulb';
+									break;
+								default:
+									Api::$logger->warning('Unknown device, not implemented yet -> ' . $dev->attributes()->productname);
+									break;
             }
+						if ($objectName) {
+							try {
+								$model = '\\Kuhschnappel\\FritzApi\\Models\\Devices\\' . $objectName;
+								$object = new $model($dev);
+								self::addDevice($object);
+							}
+							catch( \Exception $e ) {
+								Api::$logger->warning('DeviceInit -> ' . $e->getMessage());
+							}
+
+						}
 
         }
 
 //        var_dump($xml);
 
     }
+
+		public static function addDevice($device)
+    {
+			switch (get_class($device)) {
+				case 'Kuhschnappel\FritzApi\Models\Devices\SmartPlug':
+					self::$smartPlugs[] = $device;
+					break;
+				case 'Kuhschnappel\FritzApi\Models\Devices\Thermostat':
+					self::$thermostats[] = $device;
+					break;
+				case 'Kuhschnappel\FritzApi\Models\Devices\LightBulb':
+					self::$lightBulbs[] = $device;
+					break;
+
+			}
+		}
 
 
 }

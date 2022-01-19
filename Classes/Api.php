@@ -18,7 +18,7 @@ class Api
 		/**
 		 * @var object $logger monolog object for logs
 		 */
-		private static $logger = null;
+		public static $logger = null;
 
 
     /**
