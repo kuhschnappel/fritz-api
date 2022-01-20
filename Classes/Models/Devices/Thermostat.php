@@ -4,12 +4,14 @@ namespace Kuhschnappel\FritzApi\Models\Devices;
 
 use Kuhschnappel\FritzApi\Api;
 use Kuhschnappel\FritzApi\Models\Device;
+use Kuhschnappel\FritzApi\Models\Mixins\DeviceDefaults;
 use Kuhschnappel\FritzApi\Models\Mixins\DeviceTemperature;
 
 
 // FRITZ!DECT 301
 class Thermostat extends Device
 {
+	use DeviceDefaults;
 	use DeviceTemperature;
 
 
@@ -101,11 +103,28 @@ class Thermostat extends Device
 
 			// )
 
-//  print_r($cfg);
+  print_r($cfg);
 
 
 
     }
+
+	 /**
+     * @return float in °C
+     */
+		public function temperatureSoll($temperatureSoll = null)
+		{
+			//TODO: check if is plugged in (present)
+			//TODO: switchstate und und simpleonof auf 1 setzen
+			 if ($temperatureSoll)
+			 	Api::switchCmd('sethkrtsoll', ['ain' => $this->identifier, 'param' => ($temperatureSoll*2)]);
+			 else
+				$temperatureSoll = Api::switchCmd('gethkrtsoll', ['ain' => $this->identifier]);
+			return bcdiv($temperatureSoll, 2, 1);
+		}
+
+
+
 
 
 

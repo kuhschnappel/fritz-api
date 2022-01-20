@@ -7,11 +7,11 @@ trait DeviceTemperature {
 
 
 	  /**
-     * @return string
+     * @return float in °C
      */
-    public function getRoomTemperature($unit = true)
+    public function temperature()
     {
-        return bcdiv($this->temperature['celsius'], 10, 1) . ($unit ? ' °C' : '');
+        return bcdiv($this->temperature['celsius'], 10, 1);
     }
 
 

@@ -4,6 +4,7 @@ namespace Kuhschnappel\FritzApi\Models\Devices;
 
 use Kuhschnappel\FritzApi\Api;
 use Kuhschnappel\FritzApi\Models\Device;
+use Kuhschnappel\FritzApi\Models\Mixins\DeviceDefaults;
 use Kuhschnappel\FritzApi\Models\Mixins\DevicePower;
 use Kuhschnappel\FritzApi\Models\Mixins\DeviceTemperature;
 
@@ -12,7 +13,7 @@ use Kuhschnappel\FritzApi\Models\Mixins\DeviceTemperature;
 // FRITZ!DECT 210
 class SmartPlug extends Device
 {
-
+		use DeviceDefaults;
 		use DevicePower;
 		use DeviceTemperature;
 
@@ -102,7 +103,7 @@ class SmartPlug extends Device
         ]);
 
         $this->setSimpleonoff([
-            'state'=>(int)$cfg->simpleonoff->voltage
+            'state'=>(int)$cfg->simpleonoff->state
         ]);
 
         $this->setPowermeter([
@@ -131,11 +132,11 @@ class SmartPlug extends Device
     }
 
     /**
-     * @return string
+     * @return float // in Watt
      */
-    public function getCurrentPowerConsumption($unit = true)
+    public function getCurrentPowerConsumption()
     {
-        return bcdiv($this->powermeter['power'], 1000, 3) . ($unit ? ' Watt' : '');
+        return bcdiv($this->powermeter['power'], 1000, 3);
     }
 
     /**
@@ -170,9 +171,24 @@ class SmartPlug extends Device
         $this->simpleonoff = $simpleonoff;
     }
 
+		public function toggle()
+		{
+			$this->switch['state'] = Api::switchCmd('setswitchtoggle', ['ain' => $this->identifier]);
+		}
 
+		public function powerOff()
+		{
+			//TODO: check if is plugged in (present)
+			//TODO: switchstate und und simpleonof auf 0 setzen
+			$this->switch['state'] =  Api::switchCmd('setswitchon', ['ain' => $this->identifier]);
+		}
 
-
+		public function powerOn()
+		{
+			//TODO: check if is plugged in (present)
+			//TODO: switchstate und und simpleonof auf 1 setzen
+			$this->switch['state'] = Api::switchCmd('setswitchon', ['ain' => $this->identifier]);
+		}
 
 
 		// abfrage des powerstate

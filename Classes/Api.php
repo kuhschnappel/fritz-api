@@ -78,7 +78,7 @@ class Api
 				$route = API::ROUTE_SWITCH . $cmd . '&sid=' . self::getSession() . $paramsUrl;
 
 				$response = self::curlApiRoute($route);
-				return $response;
+				return trim($response);
 		}
 
     private static function curlApiRoute($route)
@@ -101,12 +101,12 @@ class Api
 							'Route' => $route,
 							'Response' => serialize($response->getBody())
 						]);
-            return $response->getBody();
+	          return $response->getBody();
         } catch (ClientException $e) {
 						self::$logger->error('FritzBoxRequest', [
 							'Status' => $e->getResponse()->getStatusCode(),
 							'Route' => $route,
-							'Response' => json_encode($response->getBody())
+							'Response' => ($response && method_exists('response','getBody')) ? json_encode($response->getBody()) : null
 						]);
             throw new \Exception('Fritz!Box communication error');
         }

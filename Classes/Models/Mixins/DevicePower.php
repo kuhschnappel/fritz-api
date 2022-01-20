@@ -21,6 +21,7 @@ trait DevicePower {
 
 	public function powerOff()
 	{
+		//TODO: check if is plugged in (present)
 		//TODO: switchstate und und simpleonof auf 0 setzen
 		$this->switch['state'] = $this->simpleonoff['state'] = 0;
 		Api::switchCmd('setsimpleonoff', ['ain' => $this->identifier, 'onoff' => 0]);
@@ -28,6 +29,7 @@ trait DevicePower {
 
 	public function powerOn()
 	{
+		//TODO: check if is plugged in (present)
 		//TODO: switchstate und und simpleonof auf 1 setzen
 		$this->switch['state'] = $this->simpleonoff['state'] = 1;
 		Api::switchCmd('setsimpleonoff', ['ain' => $this->identifier, 'onoff' => 1]);
