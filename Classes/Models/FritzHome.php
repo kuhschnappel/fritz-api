@@ -36,27 +36,27 @@ class FritzHome
      */
     public static function getSmartPlugs($refresh = false)
     {
-        if($refresh)
+        if ($refresh)
             self::getDevices($refresh);
         return self::$smartPlugs;
     }
 
-	  /**
+    /**
      * @return array
      */
     public static function getThermostats($refresh = false)
     {
-        if($refresh)
+        if ($refresh)
             self::getDevices($refresh);
         return self::$thermostats;
     }
 
-	  /**
+    /**
      * @return array
      */
     public static function getLightBulbs($refresh = false)
     {
-        if($refresh)
+        if ($refresh)
             self::getDevices($refresh);
         return self::$lightBulbs;
     }
@@ -65,45 +65,42 @@ class FritzHome
     {
         /*if (!self::$devices)
             self::$devices = new Devices();*/
-        if ($refresh)
-        {
+        if ($refresh) {
             self::$smartPlugs = [];
         }
 
         // $xml = API::getDeviceListInfos();
 
-				$response = Api::switchCmd('getdevicelistinfos');
+        $response = Api::switchCmd('getdevicelistinfos');
 
-				// $response = self::curlApiRoute(API::ROUTE_SWITCH . 'getdevicelistinfos&sid='.self::getSession());
-				$xml = simplexml_load_string($response);
+        // $response = self::curlApiRoute(API::ROUTE_SWITCH . 'getdevicelistinfos&sid='.self::getSession());
+        $xml = simplexml_load_string($response);
 
-        foreach ($xml->device as $dev)
-        {
+        foreach ($xml->device as $dev) {
             switch ($dev->attributes()->productname) {
                 case 'FRITZ!DECT 210':
-									$objectName = 'SmartPlug';
+                    $objectName = 'SmartPlug';
                     break;
-								case 'FRITZ!DECT 301':
-									$objectName = 'Thermostat';
-									break;
-								case 'FRITZ!DECT 500':
-									$objectName = 'LightBulb';
-									break;
-								default:
-									Api::$logger->warning('Unknown device, not implemented yet -> ' . $dev->attributes()->productname);
-									break;
+                case 'FRITZ!DECT 301':
+                    $objectName = 'Thermostat';
+                    break;
+                case 'FRITZ!DECT 500':
+                    $objectName = 'LightBulb';
+                    break;
+                default:
+                    Api::$logger->warning('Unknown device, not implemented yet -> ' . $dev->attributes()->productname);
+                    break;
             }
-						if ($objectName) {
-							try {
-								$model = '\\Kuhschnappel\\FritzApi\\Models\\Devices\\' . $objectName;
-								$object = new $model($dev);
-								self::addDevice($object);
-							}
-							catch( \Exception $e ) {
-								Api::$logger->warning('DeviceInit -> ' . $e->getMessage());
-							}
+            if ($objectName) {
+                try {
+                    $model = '\\Kuhschnappel\\FritzApi\\Models\\Devices\\' . $objectName;
+                    $object = new $model($dev);
+                    self::addDevice($object);
+                } catch (\Exception $e) {
+                    Api::$logger->warning('DeviceInit -> ' . $e->getMessage());
+                }
 
-						}
+            }
 
         }
 
@@ -111,21 +108,21 @@ class FritzHome
 
     }
 
-		public static function addDevice($device)
+    public static function addDevice($device)
     {
-			switch (get_class($device)) {
-				case 'Kuhschnappel\FritzApi\Models\Devices\SmartPlug':
-					self::$smartPlugs[] = $device;
-					break;
-				case 'Kuhschnappel\FritzApi\Models\Devices\Thermostat':
-					self::$thermostats[] = $device;
-					break;
-				case 'Kuhschnappel\FritzApi\Models\Devices\LightBulb':
-					self::$lightBulbs[] = $device;
-					break;
+        switch (get_class($device)) {
+            case 'Kuhschnappel\FritzApi\Models\Devices\SmartPlug':
+                self::$smartPlugs[] = $device;
+                break;
+            case 'Kuhschnappel\FritzApi\Models\Devices\Thermostat':
+                self::$thermostats[] = $device;
+                break;
+            case 'Kuhschnappel\FritzApi\Models\Devices\LightBulb':
+                self::$lightBulbs[] = $device;
+                break;
 
-			}
-		}
+        }
+    }
 
 
 }

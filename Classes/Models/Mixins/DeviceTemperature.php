@@ -1,12 +1,15 @@
 <?php
+
 namespace Kuhschnappel\FritzApi\Models\Mixins;
+
 use Kuhschnappel\FritzApi\Api;
 
 
-trait DeviceTemperature {
+trait DeviceTemperature
+{
 
 
-	  /**
+    /**
      * @return float in °C
      */
     public function temperature()

@@ -44,49 +44,49 @@ class Device
      */
     public $name;
 
-		/**
+    /**
      * @var string $present
      */
     public $present;
 
-		/**
+    /**
      * @var string $txbusy
      */
     public $txbusy;
 
 
-		public function __construct($cfg)
+    public function __construct($cfg)
     {
 
-				//abort this incomplete device
-				if ((string)$cfg->attributes()->functionbitmask == '1')
-					throw new \Exception( 'Device not initialized due to low functionbitmask (1): ' .
-						json_encode([
-							'productname' => (string)$cfg->attributes()->productname,#
-							'name' => (string)$cfg->name,#
-							'identifier' => (string)$cfg->attributes()->identifier
-						])
-					);
+        //abort this incomplete device
+        if ((string)$cfg->attributes()->functionbitmask == '1')
+            throw new \Exception('Device not initialized due to low functionbitmask (1): ' .
+                json_encode([
+                    'productname' => (string)$cfg->attributes()->productname,#
+                    'name' => (string)$cfg->name,#
+                    'identifier' => (string)$cfg->attributes()->identifier
+                ])
+            );
 
-				//attributes
-				$this->setIdentifier((string)$cfg->attributes()->identifier);
-				$this->setFunctionbitmask((string)$cfg->attributes()->functionbitmask);
-				$this->setFwversion((string)$cfg->attributes()->fwversion);
-				$this->setManufacturer((string)$cfg->attributes()->manufacturer);
-				$this->setProductname((string)$cfg->attributes()->productname);
+        //attributes
+        $this->setIdentifier((string)$cfg->attributes()->identifier);
+        $this->setFunctionbitmask((string)$cfg->attributes()->functionbitmask);
+        $this->setFwversion((string)$cfg->attributes()->fwversion);
+        $this->setManufacturer((string)$cfg->attributes()->manufacturer);
+        $this->setProductname((string)$cfg->attributes()->productname);
 
         $this->setPresent((string)$cfg->present);
         $this->setTxbusy((string)$cfg->txbusy);
         $this->setName((string)$cfg->name);
 
-				if (isset($cfg->temperature)) {
-					$arr = [];
-					if (isset($cfg->temperature->celsius))
-						$arr['celsius'] = (string)$cfg->temperature->celsius;
-					if (isset($cfg->temperature->offset))
-						$arr['offset'] = (string)$cfg->temperature->offset;
-					$this->setTemperature($arr);
-				}
+        if (isset($cfg->temperature)) {
+            $arr = [];
+            if (isset($cfg->temperature->celsius))
+                $arr['celsius'] = (string)$cfg->temperature->celsius;
+            if (isset($cfg->temperature->offset))
+                $arr['offset'] = (string)$cfg->temperature->offset;
+            $this->setTemperature($arr);
+        }
 
 
     }
@@ -238,7 +238,7 @@ class Device
     }
 
 
-		/**
+    /**
      * @param array $temperature
      */
     public function setTemperature($temperature)

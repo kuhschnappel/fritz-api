@@ -11,14 +11,14 @@ use \Monolog\Handler\RotatingFileHandler;
 class Api
 {
 
-    CONST ROUTE_LOGIN = '/login_sid.lua?version=2';
-    CONST ROUTE_SWITCH = '/webservices/homeautoswitch.lua?switchcmd=';
+    const ROUTE_LOGIN = '/login_sid.lua?version=2';
+    const ROUTE_SWITCH = '/webservices/homeautoswitch.lua?switchcmd=';
 
 
-		/**
-		 * @var object $logger monolog object for logs
-		 */
-		public static $logger = null;
+    /**
+     * @var object $logger monolog object for logs
+     */
+    public static $logger = null;
 
 
     /**
@@ -60,26 +60,27 @@ class Api
             'base_uri' => self::$authData['host']
         ]);
 
-				self::initLogging();
+        self::initLogging();
 
     }
 
-    public static function loadDevices() {
+    public static function loadDevices()
+    {
         echo "Geräte laden!!";
     }
 
-		public static function switchCmd($cmd, $params = null)
-		{
-				$paramsUrl  = '';
-				if ($params)
-					foreach ($params as $var => $value)
-						$paramsUrl.= '&'.$var.'='.$value;
+    public static function switchCmd($cmd, $params = null)
+    {
+        $paramsUrl = '';
+        if ($params)
+            foreach ($params as $var => $value)
+                $paramsUrl .= '&' . $var . '=' . $value;
 
-				$route = API::ROUTE_SWITCH . $cmd . '&sid=' . self::getSession() . $paramsUrl;
+        $route = API::ROUTE_SWITCH . $cmd . '&sid=' . self::getSession() . $paramsUrl;
 
-				$response = self::curlApiRoute($route);
-				return trim($response);
-		}
+        $response = self::curlApiRoute($route);
+        return trim($response);
+    }
 
     private static function curlApiRoute($route)
     {
@@ -96,18 +97,18 @@ class Api
                     'headers' => $headers
                 ]
             );
-						self::$logger->debug('FritzBoxRequest', [
-							// 'Status' => $response->getStatusCode(),
-							'Route' => $route,
-							'Response' => serialize($response->getBody())
-						]);
-	          return $response->getBody();
+            self::$logger->debug('FritzBoxRequest', [
+                // 'Status' => $response->getStatusCode(),
+                'Route' => $route,
+                'Response' => serialize($response->getBody())
+            ]);
+            return $response->getBody();
         } catch (ClientException $e) {
-						self::$logger->error('FritzBoxRequest', [
-							'Status' => $e->getResponse()->getStatusCode(),
-							'Route' => $route,
-							'Response' => ($response && method_exists('response','getBody')) ? json_encode($response->getBody()) : null
-						]);
+            self::$logger->error('FritzBoxRequest', [
+                'Status' => $e->getResponse()->getStatusCode(),
+                'Route' => $route,
+                'Response' => ($response && method_exists('response', 'getBody')) ? json_encode($response->getBody()) : null
+            ]);
             throw new \Exception('Fritz!Box communication error');
         }
     }
@@ -144,35 +145,36 @@ class Api
     }
 
 
-		private static function initLogging() {
+    private static function initLogging()
+    {
 
-			$logDir = defined('FRITZ_API_LOG_DIR') ? FRITZ_API_LOG_DIR : $_SERVER['DOCUMENT_ROOT'] . '/logs';
+        $logDir = defined('FRITZ_API_LOG_DIR') ? FRITZ_API_LOG_DIR : $_SERVER['DOCUMENT_ROOT'] . '/logs';
 
-					if (!is_dir($logDir))
-							mkdir($logDir, 0777, true);
+        if (!is_dir($logDir))
+            mkdir($logDir, 0777, true);
 
-					$htaccess = $logDir .'/.htaccess';
-					if (!is_file($htaccess)) {
-							$content = 'Deny from all';
-							file_put_contents($htaccess, $content);
-					}
+        $htaccess = $logDir . '/.htaccess';
+        if (!is_file($htaccess)) {
+            $content = 'Deny from all';
+            file_put_contents($htaccess, $content);
+        }
 
-	 		// $loglevel = defined('FRITZ_API_LOG_LEVEL') ? Logger::FRITZ_API_LOG_LEVEL : Logger::ERROR;
-	 		$loglevel = defined('FRITZ_API_LOG_LEVEL') ? Logger::FRITZ_API_LOG_LEVEL : Logger::DEBUG;
+        // $loglevel = defined('FRITZ_API_LOG_LEVEL') ? Logger::FRITZ_API_LOG_LEVEL : Logger::ERROR;
+        $loglevel = defined('FRITZ_API_LOG_LEVEL') ? Logger::FRITZ_API_LOG_LEVEL : Logger::DEBUG;
 
-			self::$logger = new Logger('fritzApi');
-			self::$logger->pushHandler(new RotatingFileHandler($logDir . '/fritz-api-connector.log', 30, $loglevel));
-
-
-	// 		if (defined('VINOU_DEBUG') && VINOU_DEBUG)
-	// 			$loglevel = Logger::DEBUG;
+        self::$logger = new Logger('fritzApi');
+        self::$logger->pushHandler(new RotatingFileHandler($logDir . '/fritz-api-connector.log', 30, $loglevel));
 
 
-	// //$loglevel = Logger::DEBUG;
+        // 		if (defined('VINOU_DEBUG') && VINOU_DEBUG)
+        // 			$loglevel = Logger::DEBUG;
 
-	// 		$this->logger = new Logger('api');
-	// 		$this->logger->pushHandler(new RotatingFileHandler($logDir.'api-connector.log', 30, $loglevel));
 
-		}
+        // //$loglevel = Logger::DEBUG;
+
+        // $this->logger = new Logger('api');
+        // 		$this->logger->pushHandler(new RotatingFileHandler($logDir.'api-connector.log', 30, $loglevel));
+
+    }
 
 }

@@ -8,18 +8,17 @@ use Kuhschnappel\FritzApi\Models\Mixins\DeviceDefaults;
 use Kuhschnappel\FritzApi\Models\Mixins\DevicePower;
 
 
-
 // FRITZ!DECT 500
 class LightBulb extends Device
 {
 
-		use DeviceDefaults;
-		use DevicePower;
+    use DeviceDefaults;
+    use DevicePower;
 
     public function __construct($cfg)
     {
 
-			parent::__construct($cfg);
+        parent::__construct($cfg);
 
 // SimpleXMLElement Object
 // (
@@ -109,8 +108,6 @@ class LightBulb extends Device
 // )
 
 
-
-
 //eingeschalten
 // SimpleXMLElement Object
 // (
@@ -175,8 +172,6 @@ class LightBulb extends Device
 //         )
 
 // )
-
-
 
 
     }

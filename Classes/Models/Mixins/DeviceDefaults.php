@@ -1,17 +1,20 @@
 <?php
+
 namespace Kuhschnappel\FritzApi\Models\Mixins;
+
 use Kuhschnappel\FritzApi\Api;
 
 
-trait DeviceDefaults {
+trait DeviceDefaults
+{
 
-	/**
-	 * @return boolean
-	 */
-	public function isConnected()
-	{
-		return (boolean)$this->getPresent();
-	}
+    /**
+     * @return boolean
+     */
+    public function isConnected()
+    {
+        return (boolean)$this->getPresent();
+    }
 
 
 }
