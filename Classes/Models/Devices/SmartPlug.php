@@ -126,14 +126,6 @@ class SmartPlug extends Device
         $this->powermeter = $powermeter;
     }
 
-    /**
-     * @return float // in Watt
-     */
-    public function getCurrentPowerConsumption()
-    {
-        return bcdiv($this->powermeter['power'], 1000, 3);
-    }
-    //TODO: change in getswitchpower - Ermittelt aktuell über die Steckdose entnommene Leistung in mW
 
     /**
      * @return array
@@ -167,32 +159,61 @@ class SmartPlug extends Device
         $this->simpleonoff = $simpleonoff;
     }
 
+
+    /**
+     * @return boolean
+     */
+    public function isPower($cached = false)
+    {
+        if (!$cached)
+            $this->fritzDeviceInfos->switch->state = (string)Api::switchCmd('getswitchstate', ['ain' => $this->getIdentifier()]);
+
+        return (string)$this->fritzDeviceInfos->switch->state;
+    }
+
     public function toggle()
     {
-        $this->switch['state'] = Api::switchCmd('setswitchtoggle', ['ain' => $this->getIdentifier()]);
+        $this->fritzDeviceInfos->switch->state = Api::switchCmd('setswitchtoggle', ['ain' => $this->getIdentifier()]);
     }
 
     public function powerOff()
     {
-        echo "ausschalten!";
         //TODO: check if is plugged in (present)
-        //TODO: switchstate und und simpleonof auf 0 setzen
-        $this->switch['state'] = Api::switchCmd('setswitchoff', ['ain' => $this->getIdentifier()]);
+        $this->fritzDeviceInfos->switch->state = Api::switchCmd('setswitchoff', ['ain' => $this->getIdentifier()]);
     }
 
     public function powerOn()
     {
         //TODO: check if is plugged in (present)
-        //TODO: switchstate und und simpleonof auf 1 setzen
-        $this->switch['state'] = Api::switchCmd('setswitchon', ['ain' => $this->getIdentifier()]);
+        $this->fritzDeviceInfos->switch->state = Api::switchCmd('setswitchon', ['ain' => $this->getIdentifier()]);
     }
 
 
-    // abfrage des powerstate
-    // $res = Api::switchCmd('getswitchstate', $this->getIdentifier());
+    /**
+     * @return float Leistung in mW, "inval" wenn unbekannt
+     * Ermittelt aktuell über die Steckdose entnommene Leistung
+     */
+    public function getPower($cached = false)
+    {
+        if (!$cached)
+            $this->fritzDeviceInfos->powermeter->power = (string)Api::switchCmd('getswitchpower', ['ain' => $this->getIdentifier()]);
+
+        return bcdiv($this->fritzDeviceInfos->powermeter->power, 1000, 3);
+    }
+
+    /**
+     * @return float Energie in Wh, "inval" wenn unbekannt
+     * Liefert die über die Steckdose entnommene Ernergiemenge seit Erstinbetriebnahme oder Zurücksetzen der Energiestatistik
+     */
+    public function getConsumption($cached = false)
+    {
+        if (!$cached)
+            $this->fritzDeviceInfos->powermeter->energy = (string)Api::switchCmd('getswitchenergy', ['ain' => $this->getIdentifier()]);
+
+        return bcdiv($this->fritzDeviceInfos->powermeter->energy, 1000, 3);
+    }
 
 
-    //TODO: getswitchstate - Ermittelt Schaltzustand der Steckdose
 
 
 

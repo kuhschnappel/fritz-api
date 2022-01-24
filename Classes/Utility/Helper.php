@@ -4,7 +4,9 @@ namespace Kuhschnappel\FritzApi\Utility;
 
 class Helper
 {
-    const GRAD_CELSIUS = '°C';
+    const GRAD_CELSIUS = ' °C';
+    const POWER_CONSUMPTION = ' kWH';
+    const POWER = ' Watt';
 
     public static function unhexlify($str)
     {
@@ -21,13 +23,7 @@ class Helper
 
     public static function formatOutput($value, $targetFormat)
     {
-
-
-        switch($targetFormat) {
-            case Helper::GRAD_CELSIUS:
-                return number_format($value,1,',', '.') . Helper::GRAD_CELSIUS;
-                break;
-        }
+        return number_format($value,1,',', '.') . $targetFormat;
     }
 
 }
