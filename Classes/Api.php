@@ -160,7 +160,7 @@ class Api
         }
 
         // $loglevel = defined('FRITZ_API_LOG_LEVEL') ? Logger::FRITZ_API_LOG_LEVEL : Logger::ERROR;
-        $loglevel = defined('FRITZ_API_LOG_LEVEL') ? Logger::FRITZ_API_LOG_LEVEL : Logger::DEBUG;
+        $loglevel = defined('FRITZ_API_LOG_LEVEL') ? FRITZ_API_LOG_LEVEL : Logger::DEBUG;
 
         self::$logger = new Logger('fritzApi');
         self::$logger->pushHandler(new RotatingFileHandler($logDir . '/fritz-api-connector.log', 30, $loglevel));

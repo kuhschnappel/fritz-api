@@ -185,30 +185,70 @@ class LightBulb extends Device
      */
     public function isOn()
     {
-        return (boolean)$this->switch['state'];
+        return boolval((string)$this->fritzDeviceInfos->simpleonoff->state);
     }
 
-    public function toggle()
+    public function powerToggle()
     {
-        $this->switch['state'] = $this->simpleonoff['state'] = (int)!$this->isOn();
+//        $this->fritzDeviceInfos->simpleonoff->state = (int)!$this->isOn();
         Api::switchCmd('setsimpleonoff', ['ain' => $this->getIdentifier(), 'onoff' => 2]);
+        return $this->fritzDeviceInfos->simpleonoff->state = !$this->isOn();
     }
 
     public function powerOff()
     {
         //TODO: check if is plugged in (present)
         //TODO: switchstate und und simpleonof auf 0 setzen
-        $this->switch['state'] = $this->simpleonoff['state'] = 0;
-        Api::switchCmd('setsimpleonoff', ['ain' => $this->getIdentifier(), 'onoff' => 0]);
+        return $this->fritzDeviceInfos->simpleonoff->state = Api::switchCmd('setsimpleonoff', ['ain' => $this->getIdentifier(), 'onoff' => 0]);
+
     }
 
     public function powerOn()
     {
         //TODO: check if is plugged in (present)
         //TODO: switchstate und und simpleonof auf 1 setzen
-        $this->switch['state'] = $this->simpleonoff['state'] = 1;
-        Api::switchCmd('setsimpleonoff', ['ain' => $this->getIdentifier(), 'onoff' => 1]);
 
+        return $this->fritzDeviceInfos->simpleonoff->state = Api::switchCmd('setsimpleonoff', ['ain' => $this->getIdentifier(), 'onoff' => 1]);
+
+    }
+
+
+    /*
+     * @return float level 0-100 in percent
+     */
+    public function getBrightness()
+    {
+        return (float) $this->fritzDeviceInfos->levelcontrol->levelpercentage;
+
+    }
+
+    /*
+     * @var float level 0-100 in percent
+     */
+    public function setBrightness($level)
+    {
+        $this->fritzDeviceInfos->levelcontrol->levelpercentage = round($level);
+        $level = round($level/100*255,0);
+        return $this->fritzDeviceInfos->levelcontrol->level = Api::switchCmd('setlevel', ['ain' => $this->getIdentifier(), 'level' => $level]);
+    }
+
+    /*
+     * @var int kelvin 2700 - 6500
+     * @var int duration in ms
+     */
+    public function setColorTemperature($kelvin, $duration = 100)
+    {
+        if ($kelvin < 2700)
+            $kelvin = 2700;
+        if ($kelvin > 6500)
+            $kelvin = 6500;
+
+echo $kelvin;
+
+//        $this->fritzDeviceInfos->levelcontrol->levelpercentage = round($level);
+//        $level = round($level/100*255,0);
+//        return $this->fritzDeviceInfos->levelcontrol->level =
+            Api::switchCmd('setcolortemperature', ['ain' => $this->getIdentifier(), 'temperature' => $kelvin, 'duration' => $duration]);
     }
 
 }

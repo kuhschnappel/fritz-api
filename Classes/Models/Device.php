@@ -32,6 +32,7 @@ class Device
 
 
     public function setDefaultsFromResponse($xml) {
+//        var_dump($xml);
         if ((string)$xml->attributes()->functionbitmask == '1')
             throw new \Exception('Device not initialized due to low functionbitmask (1): ' .
                 json_encode([

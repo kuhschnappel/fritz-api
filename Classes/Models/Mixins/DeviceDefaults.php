@@ -39,8 +39,26 @@ trait DeviceDefaults
         //TODO: check rights - 400er error
         Api::switchCmd('setswitchname', ['ain' => $this->getIdentifier(), 'name' => $name]);
         $this->fritzDeviceInfos->name = $name;
-
     }
 
+    /**
+     * @var string type to verify
+     * @return boolean
+     */
+    public function isType($type)
+    {
+        if ($this->getType() == $type)
+            return true;
+
+        return false;
+    }
+
+    /**
+     * @return string
+     */
+    public function getType()
+    {
+        return end(explode('\\',get_class($this)));
+    }
 
 }
