@@ -4,125 +4,108 @@
 namespace Kuhschnappel\FritzApi\Models;
 
 use Kuhschnappel\FritzApi\Api;
+
 use Kuhschnappel\FritzApi\Models\Devices\SmartPlug;
 use Kuhschnappel\FritzApi\Models\Devices\Thermostat;
 use Kuhschnappel\FritzApi\Models\Devices\LightBulb;
 
 class FritzHome
 {
-    /**
-     * @var \Kuhschnappel\FritzApi\Api
-     */
-    protected static $api;
+
+    const DEVICES = [
+        'LightBulb' => 'Kuhschnappel\\FritzApi\\Models\\Devices\\LightBulb',
+        'SmartPlug' => 'Kuhschnappel\\FritzApi\\Models\\Devices\\SmartPlug',
+        'Thermostat' => 'Kuhschnappel\\FritzApi\\Models\\Devices\\Thermostat',
+    ];
 
     /**
-     * @var array set of SmartPlug Devices
+     *
+     * @var array
      */
-    protected static $smartPlugs;
+    public static $devices = [];
 
-    /**
-     * @var array set of Thermostats Devices
-     */
-    protected static $thermostats;
-
-    /**
-     * @var array set of LightBulb Devices
-     */
-    protected static $lightBulbs;
-
-
-    /**
-     * @return array
-     */
-    public static function getSmartPlugs($refresh = false)
+    public static function addDevice($cfg)
     {
-        if ($refresh)
-            self::getDevices($refresh);
-        return self::$smartPlugs;
-    }
+        $ain = (string)$cfg->attributes()->identifier;
 
-    /**
-     * @return array
-     */
-    public static function getThermostats($refresh = false)
-    {
-        if ($refresh)
-            self::getDevices($refresh);
-        return self::$thermostats;
-    }
 
-    /**
-     * @return array
-     */
-    public static function getLightBulbs($refresh = false)
-    {
-        if ($refresh)
-            self::getDevices($refresh);
-        return self::$lightBulbs;
-    }
-
-    public static function getDevices($refresh = false)
-    {
-        /*if (!self::$devices)
-            self::$devices = new Devices();*/
-        if ($refresh) {
-            self::$smartPlugs = [];
-        }
-
-        // $xml = API::getDeviceListInfos();
-
-        $response = Api::switchCmd('getdevicelistinfos');
-
-        // $response = self::curlApiRoute(API::ROUTE_SWITCH . 'getdevicelistinfos&sid='.self::getSession());
-        $xml = simplexml_load_string($response);
-
-        foreach ($xml->device as $dev) {
-            switch ($dev->attributes()->productname) {
+        try {
+            switch ($cfg->attributes()->productname) {
+                case 'FRITZ!DECT 500':
+                    return self::$devices[$ain] = new LightBulb($cfg);
+                    break;
                 case 'FRITZ!DECT 210':
-                    $objectName = 'SmartPlug';
+                    return self::$devices[$ain] = new SmartPlug($cfg);
                     break;
                 case 'FRITZ!DECT 301':
-                    $objectName = 'Thermostat';
-                    break;
-                case 'FRITZ!DECT 500':
-                    $objectName = 'LightBulb';
+                    return self::$devices[$ain] = new Thermostat($cfg);
                     break;
                 default:
-                    Api::$logger->warning('Unknown device, not implemented yet -> ' . $dev->attributes()->productname);
+                    Api::$logger->warning('Unknown device, not implemented yet -> ' . $cfg->attributes()->productname);
                     break;
             }
-            if ($objectName) {
-                try {
-                    $model = '\\Kuhschnappel\\FritzApi\\Models\\Devices\\' . $objectName;
-                    $object = new $model($dev);
-                    self::addDevice($object);
-                } catch (\Exception $e) {
-                    Api::$logger->warning('DeviceInit -> ' . $e->getMessage());
-                }
 
-            }
-
+            return self::$devices[$ain] = $device;
+        } catch (\Exception $e) {
+            Api::$logger->warning('DeviceInit -> ' . $e->getMessage());
         }
-
-//        var_dump($xml);
 
     }
 
-    public static function addDevice($device)
+    public static function fetchDevices()
     {
-        switch (get_class($device)) {
-            case 'Kuhschnappel\FritzApi\Models\Devices\SmartPlug':
-                self::$smartPlugs[] = $device;
-                break;
-            case 'Kuhschnappel\FritzApi\Models\Devices\Thermostat':
-                self::$thermostats[] = $device;
-                break;
-            case 'Kuhschnappel\FritzApi\Models\Devices\LightBulb':
-                self::$lightBulbs[] = $device;
-                break;
+        /*$filterDeviceModels = array_intersect_key(self::DEVICES, array_flip(func_get_args()));
+        var_dump($filterDeviceModels);*/
 
-        }
+//        var_dump($filterDeviceModels);
+//        var_dump(self::DEVICES);
+//        die;
+        $response = Api::switchCmd('getdevicelistinfos');
+        $xml = simplexml_load_string($response);
+
+        foreach ($xml->device as $dev)
+            self::addDevice($dev);
+
+        return call_user_func_array('self::getDevices', func_get_args());
+//        return self::getDevices(func_get_args());
     }
 
+    public static function fetchDevice($ain)
+    {
+        if ($response = Api::switchCmd('getdeviceinfos', ['ain' => $ain]))
+            return self::addDevice(simplexml_load_string($response));
+
+        Api::$logger->error('Device with Ain ' . $ain . ' not found in Fritz!Box');
+
+    }
+
+    /*
+     * @var mixed device object
+     * @return mixed
+     */
+    public static function getDevices()
+    {
+        $filterDeviceModels = array_intersect_key(self::DEVICES, array_flip(func_get_args()));
+        if (empty($filterDeviceModels) || !count($filterDeviceModels))
+            return self::$devices;
+
+        $retArr = [];
+        foreach (self::$devices as $device)
+            if (in_array(get_class($device), $filterDeviceModels))
+                $retArr[] = $device;
+
+        return $retArr;;
+    }
+
+    /*
+     * @var string ain identifier
+     * @return mixed
+     */
+    public static function getDevice($ain)
+    {
+        if(isset(self::$devices[$ain]))
+            return self::$devices[$ain];
+
+    }
 
 }

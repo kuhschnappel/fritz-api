@@ -6,153 +6,53 @@
 
 namespace Kuhschnappel\FritzApi\Models;
 
+use Kuhschnappel\FritzApi\Api;
+//use Kuhschnappel\FritzApi\Models\FritzHome;
+//use Kuhschnappel\FritzApi\Models\Devices\LightBulb;
+//use Kuhschnappel\FritzApi\Models\Devices\SmartPlug;
+//use Kuhschnappel\FritzApi\Models\Devices\Thermostat;
+
+
 class Device
 {
 
-    /**
-     * @var string $identifier
-     */
-    public $identifier;
+
 
     /**
-     * @var int $id
+     * @var Object SimpleXMLElement
      */
-    public $id;
-
-    /**
-     * @var string $functionbitmask
-     */
-    public $functionbitmask;
-
-    /**
-     * @var string $fwversion
-     */
-    public $fwversion;
-
-    /**
-     * @var string $manufacturer
-     */
-    public $manufacturer;
-
-    /**
-     * @var string $productname
-     */
-    public $productname;
-
-    /**
-     * @var string $name
-     */
-    public $name;
-
-    /**
-     * @var string $present
-     */
-    public $present;
-
-    /**
-     * @var string $txbusy
-     */
-    public $txbusy;
+    public $fritzDeviceInfos;
 
 
-    public function __construct($cfg)
-    {
 
-        //abort this incomplete device
-        if ((string)$cfg->attributes()->functionbitmask == '1')
+    public function __construct($xml = null) {
+        if ($xml)
+            $this->setDefaultsFromResponse($xml);
+    }
+
+
+    public function setDefaultsFromResponse($xml) {
+        if ((string)$xml->attributes()->functionbitmask == '1')
             throw new \Exception('Device not initialized due to low functionbitmask (1): ' .
                 json_encode([
-                    'productname' => (string)$cfg->attributes()->productname,#
-                    'name' => (string)$cfg->name,#
-                    'identifier' => (string)$cfg->attributes()->identifier
+                    'productname' => (string)$xml->attributes()->productname,
+                    'name' => (string)$xml->name,
+                    'identifier' => (string)$xml->attributes()->identifier
                 ])
             );
 
-        //attributes
-        $this->setIdentifier((string)$cfg->attributes()->identifier);
-        $this->setFunctionbitmask((string)$cfg->attributes()->functionbitmask);
-        $this->setFwversion((string)$cfg->attributes()->fwversion);
-        $this->setManufacturer((string)$cfg->attributes()->manufacturer);
-        $this->setProductname((string)$cfg->attributes()->productname);
-
-        $this->setPresent((string)$cfg->present);
-        $this->setTxbusy((string)$cfg->txbusy);
-        $this->setName((string)$cfg->name);
-
-        if (isset($cfg->temperature)) {
-            $arr = [];
-            if (isset($cfg->temperature->celsius))
-                $arr['celsius'] = (string)$cfg->temperature->celsius;
-            if (isset($cfg->temperature->offset))
-                $arr['offset'] = (string)$cfg->temperature->offset;
-            $this->setTemperature($arr);
-        }
+        $this->fritzDeviceInfos = $xml;
 
 
     }
+
 
     /**
      * @return string
      */
     public function getIdentifier()
     {
-        return $this->identifier;
-    }
-
-    /**
-     * @param string $identifier
-     */
-    public function setIdentifier($identifier)
-    {
-        $this->identifier = $identifier;
-    }
-
-    /**
-     * @return int
-     */
-    public function getId()
-    {
-        return $this->id;
-    }
-
-    /**
-     * @param int $id
-     */
-    public function setId($id)
-    {
-        $this->id = $id;
-    }
-
-    /**
-     * @return string
-     */
-    public function getFunctionbitmask()
-    {
-        return $this->functionbitmask;
-    }
-
-    /**
-     * @param string $functionbitmask
-     */
-    public function setFunctionbitmask($functionbitmask)
-    {
-        $this->functionbitmask = $functionbitmask;
-    }
-
-    /**
-     * @return string
-     */
-    public function getManufacturer()
-    {
-        return $this->manufacturer;
-    }
-
-    /**
-     * @param string $manufacturer
-     */
-    public function setManufacturer($manufacturer)
-    {
-        $this->manufacturer = $manufacturer;
+        return (string)$this->fritzDeviceInfos->attributes()->identifier;
     }
 
     /**
@@ -160,15 +60,7 @@ class Device
      */
     public function getProductname()
     {
-        return $this->productname;
-    }
-
-    /**
-     * @param string $productname
-     */
-    public function setProductname($productname)
-    {
-        $this->productname = $productname;
+        return (string)$this->fritzDeviceInfos->attributes()->productname;
     }
 
     /**
@@ -176,73 +68,9 @@ class Device
      */
     public function getFwversion()
     {
-        return $this->fwversion;
+        return (string)$this->fritzDeviceInfos->attributes()->fwversion;
     }
 
 
-    /**
-     * @param string $fwversion
-     */
-    public function setFwversion($fwversion)
-    {
-        $this->fwversion = $fwversion;
-    }
 
-    /**
-     * @return string
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
-
-
-    /**
-     * @param string $name
-     */
-    public function setName($name)
-    {
-        $this->name = $name;
-    }
-
-    /**
-     * @return string
-     */
-    public function getPresent()
-    {
-        return $this->present;
-    }
-
-    /**
-     * @param string $present
-     */
-    public function setPresent($present)
-    {
-        $this->present = $present;
-    }
-
-    /**
-     * @return string
-     */
-    public function getTxbusy()
-    {
-        return $this->txbusy;
-    }
-
-    /**
-     * @param string $txbusy
-     */
-    public function setTxbusy($txbusy)
-    {
-        $this->txbusy = $txbusy;
-    }
-
-
-    /**
-     * @param array $temperature
-     */
-    public function setTemperature($temperature)
-    {
-        $this->temperature = $temperature;
-    }
 }

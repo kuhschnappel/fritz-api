@@ -10,11 +10,17 @@ trait DeviceTemperature
 
 
     /**
-     * @return float in °C
+     * @param bool $cached get from cache
+     * @return float Letzte Temperaturinformation des Aktors in °C
+     * Temperatur-Wert in 0,1 °C, negative und positive Werte möglich Bsp. „200“ bedeutet 20°C
      */
-    public function temperature()
+    public function getRoomTemperature($cached = false)
     {
-        return bcdiv($this->temperature['celsius'], 10, 1);
+        if (!$cached)
+            $this->fritzDeviceInfos->temperature->celsius = Api::switchCmd('gettemperature', ['ain' => $this->getIdentifier()]);
+
+        return bcdiv((string)$this->fritzDeviceInfos->temperature->celsius, 10, 1);
+
     }
 
 

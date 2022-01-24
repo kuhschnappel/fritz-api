@@ -17,6 +17,7 @@ class SmartPlug extends Device
     use DeviceTemperature;
 
 
+
     /**
      * @var array $powermeter
      * <power>Wert in 0,001 W (aktuelle Leistung, wird etwa alle 2 Minuten aktualisiert)
@@ -44,10 +45,10 @@ class SmartPlug extends Device
      */
     public $temperature;
 
-    public function __construct($cfg)
-    {
-
-        parent::__construct($cfg);
+//    public function __construct($cfg)
+//    {
+//
+//        parent::__construct($cfg);
 //        SimpleXMLElement Object
 //        (
 //            [@attributes] => Array
@@ -88,26 +89,26 @@ class SmartPlug extends Device
 
 // var_dump($cfg);
 
-
-        $this->setSwitch([
-            'state' => (int)$cfg->switch->state,
-            'mode' => (string)$cfg->switch->mode,
-            'lock' => (string)$cfg->switch->lock,
-            'devicelock' => (string)$cfg->switch->devicelock
-        ]);
-
-        $this->setSimpleonoff([
-            'state' => (int)$cfg->simpleonoff->state
-        ]);
-
-        $this->setPowermeter([
-            'voltage' => (string)$cfg->powermeter->voltage,
-            'power' => (string)$cfg->powermeter->power,
-            'energy' => (string)$cfg->powermeter->energy
-        ]);
-
-
-    }
+//
+//        $this->setSwitch([
+//            'state' => (int)$cfg->switch->state,
+//            'mode' => (string)$cfg->switch->mode,
+//            'lock' => (string)$cfg->switch->lock,
+//            'devicelock' => (string)$cfg->switch->devicelock
+//        ]);
+//
+//        $this->setSimpleonoff([
+//            'state' => (int)$cfg->simpleonoff->state
+//        ]);
+//
+//        $this->setPowermeter([
+//            'voltage' => (string)$cfg->powermeter->voltage,
+//            'power' => (string)$cfg->powermeter->power,
+//            'energy' => (string)$cfg->powermeter->energy
+//        ]);
+//
+//
+//    }
 
     /**
      * @return array
@@ -132,6 +133,7 @@ class SmartPlug extends Device
     {
         return bcdiv($this->powermeter['power'], 1000, 3);
     }
+    //TODO: change in getswitchpower - Ermittelt aktuell über die Steckdose entnommene Leistung in mW
 
     /**
      * @return array
@@ -167,26 +169,31 @@ class SmartPlug extends Device
 
     public function toggle()
     {
-        $this->switch['state'] = Api::switchCmd('setswitchtoggle', ['ain' => $this->identifier]);
+        $this->switch['state'] = Api::switchCmd('setswitchtoggle', ['ain' => $this->getIdentifier()]);
     }
 
     public function powerOff()
     {
+        echo "ausschalten!";
         //TODO: check if is plugged in (present)
         //TODO: switchstate und und simpleonof auf 0 setzen
-        $this->switch['state'] = Api::switchCmd('setswitchon', ['ain' => $this->identifier]);
+        $this->switch['state'] = Api::switchCmd('setswitchoff', ['ain' => $this->getIdentifier()]);
     }
 
     public function powerOn()
     {
         //TODO: check if is plugged in (present)
         //TODO: switchstate und und simpleonof auf 1 setzen
-        $this->switch['state'] = Api::switchCmd('setswitchon', ['ain' => $this->identifier]);
+        $this->switch['state'] = Api::switchCmd('setswitchon', ['ain' => $this->getIdentifier()]);
     }
 
 
     // abfrage des powerstate
     // $res = Api::switchCmd('getswitchstate', $this->getIdentifier());
+
+
+    //TODO: getswitchstate - Ermittelt Schaltzustand der Steckdose
+
 
 
 }

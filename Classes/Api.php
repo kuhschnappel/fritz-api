@@ -109,7 +109,7 @@ class Api
                 'Route' => $route,
                 'Response' => ($response && method_exists('response', 'getBody')) ? json_encode($response->getBody()) : null
             ]);
-            throw new \Exception('Fritz!Box communication error');
+            // throw new \Exception('Fritz!Box communication error');
         }
     }
 

@@ -15,41 +15,14 @@ class Thermostat extends Device
     use DeviceTemperature;
 
 
-    // const OFF = 0;
-    // const ON = 1;
-    // const TOGGLE = 2;
 
-    /**
-     * @var array $powermeter
-     * <power>Wert in 0,001 W (aktuelle Leistung, wird etwa alle 2 Minuten aktualisiert)
-     * <energy>Wert in 1.0 Wh (absoluter Verbrauch seit Inbetriebnahme)
-     * <voltage>Wert in 0,001 V (aktuelle Spannung, wird etwa alle 2 Minuten aktualisiert)
-     */
-    public $powermeter;
-
-    /**
-     * @var array $switch
-     *
-     */
-    private $switch;
+//    const type = 'Thermostat';
 
 
-    /**
-     * @var array $simpleonoff
-     *
-     */
-    private $simpleonoff;
-
-    /**
-     * @var array $temperature
-     *
-     */
-    public $temperature;
-
-    public function __construct($cfg)
-    {
-
-        parent::__construct($cfg);
+//    public function __construct($cfg)
+//    {
+//
+//        parent::__construct($cfg);
 
 
         // SimpleXMLElement Object
@@ -103,23 +76,74 @@ class Thermostat extends Device
 
         // )
 
-        print_r($cfg);
+//        print_r($cfg);
 
+
+//    }
+
+
+    /**
+     * @var float target temperature
+     *
+     */
+    private static $temperatureTarget;
+
+    /**
+     * @param bool $cached get from cache
+     * @return float Für HKR aktuell eingestellte Solltemperatur (0 => aus, 1 => max)
+     * Temperatur-Wert in 0,5 °C, Wertebereich: 16 – 56 8 bis 28°C, 16 <= 8°C, 17 = 8,5°C...... 56 >= 28°C 254 = ON , 253 = OFF
+     */
+    public function getTemperatureTarget($cached = false)
+    {
+        if (!$cached || !isset($this->temperatureTarget))
+            $this->temperatureTarget = Api::switchCmd('gethkrtsoll', ['ain' => $this->getIdentifier()]);
+
+        switch ($this->temperatureTarget)
+        {
+            case 254: //max
+                return 1;
+                break;
+            case 253: //off
+                return 0;
+                break;
+            default:
+                return bcdiv($this->temperatureTarget, 2, 1);
+                break;
+        }
 
     }
 
+
     /**
-     * @return float in °C
+     * @var float target temperature Temperatur-Wert in 0,5 °C, Wertebereich: 16 – 56 8 bis 28°C, 16 <= 8°C, 17 = 8,5°C...... 56 >= 28°C 254 = ON , 253 = OFF
+     * @return boolean result
+     * @todo check if device is present
      */
-    public function temperatureSoll($temperatureSoll = null)
+    public function setTemperatureTarget($temperature)
     {
-        //TODO: check if is plugged in (present)
-        //TODO: switchstate und und simpleonof auf 1 setzen
-        if ($temperatureSoll)
-            Api::switchCmd('sethkrtsoll', ['ain' => $this->identifier, 'param' => ($temperatureSoll * 2)]);
-        else
-            $temperatureSoll = Api::switchCmd('gethkrtsoll', ['ain' => $this->identifier]);
-        return bcdiv($temperatureSoll, 2, 1);
+
+        switch ($temperature)
+        {
+            case 1: //max
+                $this->temperatureTarget = 254;
+                break;
+            case 0: //off
+                $this->temperatureTarget = 253;
+                break;
+            default:
+                $tmp = bcmul($temperature, 2);
+                if (in_array($tmp, range(16,56)))
+                    $this->temperatureTarget = bcmul($temperature, 2);
+                else {
+                    Api::$logger->error('Target temperature ' . $temperature . ' not in valid range of 8 - 28, use 0 to put off or 1 to put on max');
+                    return false;
+                }
+                break;
+        }
+        Api::switchCmd('sethkrtsoll', ['ain' => $this->getIdentifier(), 'param' => $this->temperatureTarget]);
+
+        return true;
+
     }
 
 
