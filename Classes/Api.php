@@ -43,8 +43,9 @@ class Api
      * @param string $host fritz box hostname e.g. http://192.168.178.1, http://fritz.box
      * @param string $user fritz box username with rights to use Smart Home
      * @param string $password fritz box usernames password
+     * @param string $logging ERROR or DEBUG
      */
-    public static function init($user = false, $password = false, $host = 'http://192.168.178.1')
+    public static function init($user = false, $password = false, $host = 'http://192.168.178.1', $logging = 'ERROR')
     {
 
 
@@ -60,7 +61,7 @@ class Api
             'base_uri' => self::$authData['host']
         ]);
 
-        self::initLogging();
+        self::initLogging($logging);
 
     }
 
@@ -145,7 +146,7 @@ class Api
     }
 
 
-    private static function initLogging()
+    private static function initLogging($logging)
     {
 
         $logDir = defined('FRITZ_API_LOG_DIR') ? FRITZ_API_LOG_DIR : $_SERVER['DOCUMENT_ROOT'] . '/logs';
@@ -159,8 +160,7 @@ class Api
             file_put_contents($htaccess, $content);
         }
 
-        // $loglevel = defined('FRITZ_API_LOG_LEVEL') ? Logger::FRITZ_API_LOG_LEVEL : Logger::ERROR;
-        $loglevel = defined('FRITZ_API_LOG_LEVEL') ? FRITZ_API_LOG_LEVEL : Logger::DEBUG;
+        $loglevel = ($logging == 'DEBUG') ? Logger::DEBUG : Logger::ERROR;
 
         self::$logger = new Logger('fritzApi');
         self::$logger->pushHandler(new RotatingFileHandler($logDir . '/fritz-api-connector.log', 30, $loglevel));
