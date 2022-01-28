@@ -61,4 +61,46 @@ trait DeviceDefaults
         return end(explode('\\',get_class($this)));
     }
 
+    /**
+     * @param mixed measurements string or array
+     * @return string
+     * @todo implement caching
+     */
+    public function getStats($measurements = ['temperature', 'voltage', 'power', 'energy', 'humidity'])
+    {
+        $response = Api::switchCmd('getbasicdevicestats', ['ain' => $this->getIdentifier()]);
+        $xml = simplexml_load_string($response);
+
+        $measurementsArr = $measurements;
+        if (!is_array($measurements))
+            $measurementsArr = [$measurements];
+
+        $statArr = [];
+        foreach($measurementsArr as $measurement) {
+            if (isset($xml->$measurement)) {
+                $statArr[$measurement] = [];
+
+                $dt_obj = new \DateTime("UTC");
+                $ínterval = date_interval_create_from_date_string((string)$xml->$measurement->stats->attributes()->grid.' seconds');
+                $values = explode(',', (string)$xml->$measurement->stats);
+                foreach ($values as $value) {
+                    date_add($dt_obj, $ínterval);
+                    $statArr[$measurement][date_format($dt_obj, 'Y-m-d H:i:s')] = $value;
+                }
+
+            }
+        }
+        if(!is_array($measurements) && count($statArr)==1)
+            return $statArr[$measurements];
+
+        return $statArr;
+
+    }
+
+
+
+
+
+
+
 }
