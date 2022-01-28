@@ -1,6 +1,6 @@
 <?php
-//https://avm.de/fileadmin/user_upload/Global/Service/Schnittstellen/AHA-HTTP-Interface.pdf
-//https://www.heise.de/select/ct/2016/7/1459414791794586 - info zur bitmask
+
+
 namespace Kuhschnappel\FritzApi\Models;
 
 use Kuhschnappel\FritzApi\Api;
@@ -45,7 +45,6 @@ class FritzHome
                     break;
             }
 
-            return self::$devices[$ain] = $device;
         } catch (\Exception $e) {
             Api::$logger->warning('DeviceInit -> ' . $e->getMessage());
         }
@@ -54,12 +53,7 @@ class FritzHome
 
     public static function fetchDevices()
     {
-        /*$filterDeviceModels = array_intersect_key(self::DEVICES, array_flip(func_get_args()));
-        var_dump($filterDeviceModels);*/
 
-//        var_dump($filterDeviceModels);
-//        var_dump(self::DEVICES);
-//        die;
         $response = Api::switchCmd('getdevicelistinfos');
         $xml = simplexml_load_string($response);
 
@@ -67,7 +61,6 @@ class FritzHome
             self::addDevice($dev);
 
         return call_user_func_array('self::getDevices', func_get_args());
-//        return self::getDevices(func_get_args());
     }
 
     public static function fetchDevice($ain)

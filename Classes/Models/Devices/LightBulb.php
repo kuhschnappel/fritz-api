@@ -25,39 +25,35 @@ class LightBulb extends Device
 // (
 //     [@attributes] => Array
 //         (
-//             [identifier] => 13077 0000612-1
-//             [id] => 2000
+//             [identifier] => 13077 0040625-1
+//             [id] => 2001
 //             [functionbitmask] => 237572
 //             [fwversion] => 0.0
 //             [manufacturer] => AVM
 //             [productname] => FRITZ!DECT 500
 //         )
-//     [present] => 0
-//     [txbusy] => 0
-//     [name] => Flur
 
+//     [present] => 1
+//     [txbusy] => 0
+//     [name] => Flur Tür
 //     [simpleonoff] => SimpleXMLElement Object
 //         (
-//             [state] => SimpleXMLElement Object
-//                 (
-//                 )
+//             [state] => 1
 //         )
+
 //     [levelcontrol] => SimpleXMLElement Object
 //         (
-//             [level] => SimpleXMLElement Object
-//                 (
-//                 )
-//             [levelpercentage] => SimpleXMLElement Object
-//                 (
-//                 )
+//             [level] => 255
+//             [levelpercentage] => 100
 //         )
+
 //     [colorcontrol] => SimpleXMLElement Object
 //         (
 //             [@attributes] => Array
 //                 (
-//                     [supported_modes] => 0
-//                     [current_mode] =>
-//                     [fullcolorsupport] => 0
+//                     [supported_modes] => 5
+//                     [current_mode] => 4
+//                     [fullcolorsupport] => 1
 //                     [mapped] => 0
 //                 )
 
@@ -77,18 +73,17 @@ class LightBulb extends Device
 //                 (
 //                 )
 
-//             [temperature] => SimpleXMLElement Object
-//                 (
-//                 )
-
+//             [temperature] => 2700
 //         )
 
 //     [etsiunitinfo] => SimpleXMLElement Object
 //         (
-//             [etsideviceid] => 408
+//             [etsideviceid] => 409
 //             [unittype] => 278
 //             [interfaces] => 512,514,513
 //         )
+
+// )
 
 // )
 // FRITZ!DECT 500SimpleXMLElement Object
@@ -190,7 +185,6 @@ class LightBulb extends Device
 
     public function powerToggle()
     {
-//        $this->fritzDeviceInfos->simpleonoff->state = (int)!$this->isOn();
         Api::switchCmd('setsimpleonoff', ['ain' => $this->getIdentifier(), 'onoff' => 2]);
         return $this->fritzDeviceInfos->simpleonoff->state = !$this->isOn();
     }
@@ -211,7 +205,6 @@ class LightBulb extends Device
         return $this->fritzDeviceInfos->simpleonoff->state = Api::switchCmd('setsimpleonoff', ['ain' => $this->getIdentifier(), 'onoff' => 1]);
 
     }
-
 
     /*
      * @return float level 0-100 in percent
@@ -238,17 +231,34 @@ class LightBulb extends Device
      */
     public function setColorTemperature($kelvin, $duration = 100)
     {
+        //TODO: use Constants
         if ($kelvin < 2700)
             $kelvin = 2700;
         if ($kelvin > 6500)
             $kelvin = 6500;
 
-echo $kelvin;
+        Api::switchCmd('setcolortemperature', ['ain' => $this->getIdentifier(), 'temperature' => $kelvin, 'duration' => $duration]);
+    }
 
-//        $this->fritzDeviceInfos->levelcontrol->levelpercentage = round($level);
-//        $level = round($level/100*255,0);
-//        return $this->fritzDeviceInfos->levelcontrol->level =
-            Api::switchCmd('setcolortemperature', ['ain' => $this->getIdentifier(), 'temperature' => $kelvin, 'duration' => $duration]);
+    /*
+     * @var int kelvin 2700 - 6500
+     * @var int duration in ms
+     * https://de.wikipedia.org/wiki/HSV-Farbraum
+     */
+    public function setColor($hsv, $saturation, $duration = 100)
+    {
+        //TODO: use Constants
+        if ($hsv < 0)
+            $hsv = 0;
+        if ($hsv > 359)
+            $hsv = 359;
+
+        if ($saturation < 0)
+            $saturation = 0;
+        if ($saturation > 255)
+            $saturation = 255;
+
+        Api::switchCmd('setcolor', ['ain' => $this->getIdentifier(), 'hue' => $hsv, 'saturation' => $saturation, 'duration' => $duration]);
     }
 
 }

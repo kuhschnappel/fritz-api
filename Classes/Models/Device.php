@@ -28,6 +28,7 @@ class Device
     public function __construct($xml = null) {
         if ($xml)
             $this->setDefaultsFromResponse($xml);
+        // print_r($xml);
     }
 
 
