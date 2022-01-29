@@ -74,18 +74,16 @@ trait DeviceDefaults
         $measurementsArr = $measurements;
         if (!is_array($measurements))
             $measurementsArr = [$measurements];
-
         $statArr = [];
         foreach($measurementsArr as $measurement) {
             if (isset($xml->$measurement)) {
                 $statArr[$measurement] = [];
-
                 $dt_obj = new \DateTime("UTC");
                 $ínterval = date_interval_create_from_date_string((string)$xml->$measurement->stats->attributes()->grid.' seconds');
                 $values = explode(',', (string)$xml->$measurement->stats);
                 foreach ($values as $value) {
-                    date_add($dt_obj, $ínterval);
                     $statArr[$measurement][date_format($dt_obj, 'Y-m-d H:i:s')] = $value;
+                    date_sub($dt_obj, $ínterval);
                 }
 
             }
