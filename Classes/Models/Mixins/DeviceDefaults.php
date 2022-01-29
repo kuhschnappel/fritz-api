@@ -82,6 +82,8 @@ trait DeviceDefaults
                 $ínterval = date_interval_create_from_date_string((string)$xml->$measurement->stats->attributes()->grid.' seconds');
                 $values = explode(',', (string)$xml->$measurement->stats);
                 foreach ($values as $value) {
+                    if($measurement=='power')
+                        $value = (int)$value * 10;
                     $statArr[$measurement][date_format($dt_obj, 'Y-m-d H:i:s')] = $value;
                     date_sub($dt_obj, $ínterval);
                 }
