@@ -90,7 +90,7 @@ class Thermostat extends Device
 
     /**
      * @param bool $cached get from cache
-     * @return float Für HKR aktuell eingestellte Solltemperatur (0 => aus, 1 => max)
+     * @return int Für HKR aktuell eingestellte Solltemperatur (0 => aus, 1 => max) in °C * 10
      * Temperatur-Wert in 0,5 °C, Wertebereich: 16 – 56 8 bis 28°C, 16 <= 8°C, 17 = 8,5°C...... 56 >= 28°C 254 = ON , 253 = OFF
      */
     public function getTemperatureTarget($cached = false)
@@ -107,7 +107,8 @@ class Thermostat extends Device
                 return 0;
                 break;
             default:
-                return bcdiv($this->temperatureTarget, 2, 1);
+//                return bcdiv($this->temperatureTarget, 2, 1);
+                return $this->temperatureTarget;
                 break;
         }
 

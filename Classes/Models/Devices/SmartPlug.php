@@ -190,7 +190,7 @@ class SmartPlug extends Device
 
 
     /**
-     * @return float Leistung in mW, "inval" wenn unbekannt
+     * @return int Leistung in mW, "inval" wenn unbekannt
      * Ermittelt aktuell über die Steckdose entnommene Leistung
      */
     public function getPower($cached = false)
@@ -198,11 +198,12 @@ class SmartPlug extends Device
         if (!$cached)
             $this->fritzDeviceInfos->powermeter->power = (string)Api::switchCmd('getswitchpower', ['ain' => $this->getIdentifier()]);
 
-        return bcdiv($this->fritzDeviceInfos->powermeter->power, 1000, 3);
+//        return bcdiv($this->fritzDeviceInfos->powermeter->power, 1000, 3);
+        return (int)$this->fritzDeviceInfos->powermeter->power;
     }
 
     /**
-     * @return float Energie in Wh, "inval" wenn unbekannt
+     * @return int Energie in Wh, "inval" wenn unbekannt
      * Liefert die über die Steckdose entnommene Ernergiemenge seit Erstinbetriebnahme oder Zurücksetzen der Energiestatistik
      */
     public function getConsumption($cached = false)
@@ -210,7 +211,8 @@ class SmartPlug extends Device
         if (!$cached)
             $this->fritzDeviceInfos->powermeter->energy = (string)Api::switchCmd('getswitchenergy', ['ain' => $this->getIdentifier()]);
 
-        return bcdiv($this->fritzDeviceInfos->powermeter->energy, 1000, 3);
+        return (int)$this->fritzDeviceInfos->powermeter->energy;
+//        return bcdiv($this->fritzDeviceInfos->powermeter->energy, 1000, 3);
     }
 
 
