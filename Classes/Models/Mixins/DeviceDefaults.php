@@ -69,6 +69,12 @@ trait DeviceDefaults
     public function getStats($measurements = ['temperature', 'voltage', 'power', 'energy', 'humidity'])
     {
         $response = Api::switchCmd('getbasicdevicestats', ['ain' => $this->getIdentifier()]);
+
+        if($_GET['showresponse']) {
+            echo $response;
+            die;
+        }
+
         $xml = simplexml_load_string($response);
 
         $measurementsArr = $measurements;
@@ -78,14 +84,33 @@ trait DeviceDefaults
         foreach($measurementsArr as $measurement) {
             if (isset($xml->$measurement)) {
                 $statArr[$measurement] = [];
-                $dt_obj = new \DateTime("UTC");
-                $ínterval = date_interval_create_from_date_string((string)$xml->$measurement->stats->attributes()->grid.' seconds');
-                $values = explode(',', (string)$xml->$measurement->stats);
+                $datetimeNow = new \DateTime("UTC");
+                $datetimeMidnight = new \DateTime(date_format($datetimeNow, 'Y-m-d')."UTC");
+                $secondsSinceMidnight = $datetimeNow->getTimestamp() - $datetimeMidnight->getTimeStamp();
+
+
+                //getdetailed stats if more than one
+                $detailedStats = null;
+                foreach($xml->$measurement->stats as $stat) {
+                    if (!$detailedStats)
+                        $detailedStats = $stat;
+                    elseif ((int)$stat->attributes()->grid < (int)$detailedStats->attributes()->grid)
+                        $detailedStats = $stat;
+                }
+
+                $intervalSeconds = (int)$detailedStats->attributes()->grid;
+                $íntervalStart = date_interval_create_from_date_string(floor($secondsSinceMidnight/$intervalSeconds)*$intervalSeconds . ' seconds');
+                $íntervalGrid = date_interval_create_from_date_string($intervalSeconds . ' seconds');
+                $values = explode(',', (string)$detailedStats);
+
+                $datetime = clone $datetimeMidnight;
+                date_add($datetime, $íntervalStart);
+
                 foreach ($values as $value) {
                     if($measurement=='power')
                         $value = (int)$value * 10;
-                    $statArr[$measurement][date_format($dt_obj, 'Y-m-d H:i:s')] = $value;
-                    date_sub($dt_obj, $ínterval);
+                    $statArr[$measurement][date_format($datetime, 'Y-m-d H:i:s')] = $value;
+                    date_sub($datetime, $íntervalGrid);
                 }
 
             }
