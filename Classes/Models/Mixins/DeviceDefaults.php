@@ -107,6 +107,7 @@ trait DeviceDefaults
                 date_add($datetime, $íntervalStart);
 
                 foreach ($values as $value) {
+                    if($value == '-') $value = null;
                     if($measurement=='power')
                         $value = (int)$value * 10;
                     $statArr[$measurement][date_format($datetime, 'Y-m-d H:i:s')] = $value;
