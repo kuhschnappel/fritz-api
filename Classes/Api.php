@@ -85,6 +85,14 @@ class Api
 
     private static function curlApiRoute($route)
     {
+        
+        if (!self::$httpClient &&
+            defined('FRITZBOX_USER') &&
+            defined('FRITZBOX_PASSWORD') &&
+            defined('FRITZBOX_HOST')) {
+            self::init(FRITZBOX_USER, FRITZBOX_PASSWORD, FRITZBOX_HOST);
+        }
+
         $headers = [
             'User-Agent' => 'fritz-api',
             'Content-Type' => 'text/xml',
