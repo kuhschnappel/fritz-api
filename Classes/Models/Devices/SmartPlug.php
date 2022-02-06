@@ -212,9 +212,21 @@ class SmartPlug extends Device
             $this->fritzDeviceInfos->powermeter->energy = (string)Api::switchCmd('getswitchenergy', ['ain' => $this->getIdentifier()]);
 
         return (int)$this->fritzDeviceInfos->powermeter->energy;
-//        return bcdiv($this->fritzDeviceInfos->powermeter->energy, 1000, 3);
     }
 
+    /**
+     * @return int Spannung in mVolt
+     * Liefert die in der Steckdose anliegende Spannung
+     * @todo implement caching
+     */
+    public function getVoltage($cached = false)
+    {
+//        if (!$cached)
+//            refresh content with getdeviceinfos
+
+        return (int)$this->fritzDeviceInfos->powermeter->voltage;
+//        return bcdiv($this->fritzDeviceInfos->powermeter->energy, 1000, 3);
+    }
 
 
 
