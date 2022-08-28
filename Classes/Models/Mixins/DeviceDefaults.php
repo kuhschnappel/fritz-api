@@ -70,7 +70,7 @@ trait DeviceDefaults
     {
         $response = Api::switchCmd('getbasicdevicestats', ['ain' => $this->getIdentifier()]);
 
-        if($_GET['showresponse']) {
+        if(isset($_GET['showresponse'])) {
             echo $response;
             die;
         }
