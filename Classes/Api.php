@@ -96,7 +96,7 @@ class Api
         $headers = [
             'User-Agent' => 'fritz-api',
             'Content-Type' => 'text/xml',
-            'Origin' => $_SERVER['SERVER_NAME']
+            'Origin' => isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : ''
         ];
         try {
             $response = self::$httpClient->request(
